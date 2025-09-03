@@ -94,7 +94,7 @@ function handle_folder_create($pdo, $folder_model) {
     } else {
         throw new Exception("Failed to create the folder due to a database error.");
     }
-    redirect_back();
+    redirect('../index.php');
 }
 
 /**

@@ -115,7 +115,7 @@ unset($_SESSION['page_error'], $_SESSION['page_success']);
                 <button class="btn btn-success" id="create-folder-btn">Create New Folder</button>
             </div>
             <p>Welcome, <?= htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']) ?>!</p>
-            <p>Organization: <?= htmlspecialchars($organization['name'] ?? 'Unknown') ?></p>
+            <p>Department: <?= htmlspecialchars($organization['name'] ?? 'Unknown') ?></p>
             
             <?php if (isset($page_error)): ?><div class="alert alert-error"><?= htmlspecialchars($page_error) ?></div><?php endif; ?>
             <?php if ($error): ?><div class="alert alert-error"><?= htmlspecialchars($error) ?></div><?php endif; ?>

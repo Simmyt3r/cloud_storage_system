@@ -8,7 +8,7 @@
 
 // --- 1. SESSION & LOGIC INITIALIZATION ---
 // Always start the session at the very top of the script, before any output.
-session_start();
+//session_start();
 
 // Include necessary files
 require_once '../includes/config.php';
@@ -39,9 +39,9 @@ try {
     $approved_organizations = $org_model->getApproved();
 } catch (PDOException $e) {
     // In case of a database error, log it and show a friendly message.
-    error_log('Database error fetching organizations: ' . $e->getMessage());
+    error_log('Database error fetching Departments: ' . $e->getMessage());
     $approved_organizations = []; // Ensure the variable exists to prevent errors in the HTML.
-    $page_error = 'Could not load organizations. Please try again later.';
+    $page_error = 'Could not load Departments. Please try again later.';
 }
 
 // --- 4. FLASH MESSAGES ---
@@ -69,8 +69,8 @@ unset($_SESSION['form_error'], $_SESSION['form_success']);
             <nav>
                 <ul>
                     <li><a href="login.php">Login</a></li>
-                    <li><a href="register_org.php">Register Organization</a></li>
-                    <li><a href="register_user.php">Register User</a></li>
+                  <!--  <li><a href="register_org.php">Register Organization</a></li>-->
+                  <!--  <li><a href="register_user.php">Register User</a></li>-->
                 </ul>
             </nav>
         </div>
@@ -95,9 +95,9 @@ unset($_SESSION['form_error'], $_SESSION['form_success']);
             <div class="form-container">
                 <form action="../controllers/register_controller.php" method="POST">
                     <div class="form-group">
-                        <label for="organization_id">Organization:</label>
+                        <label for="organization_id">Department:</label>
                         <select id="organization_id" name="organization_id" required>
-                            <option value="">Select Organization</option>
+                            <option value="">Select</option>
                             <?php foreach ($approved_organizations as $org): ?>
                                 <!-- 5. SECURITY: Escape all dynamic attributes and content -->
                                 <option value="<?= htmlspecialchars($org['id']) ?>">

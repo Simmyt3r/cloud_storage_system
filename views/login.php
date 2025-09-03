@@ -35,8 +35,8 @@ if (is_logged_in()) {
             <div class="logo"><?php echo APP_NAME; ?></div>
             <nav>
                 <ul>
-                    <li><a href="login.php">Login</a></li>
-                    <li><a href="register_org.php">Register Organization</a></li>
+                  <!--  <li><a href="login.php">Login</a></li>-->
+                    <!--<li><a href="register_org.php">Register Organization</a></li> -->
                     <li><a href="register_user.php">Register User</a></li>
                 </ul>
             </nav>
