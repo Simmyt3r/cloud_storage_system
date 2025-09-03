@@ -68,7 +68,10 @@ unset($_SESSION['page_error'], $_SESSION['page_success']);
     
     <div class="container">
         <div class="main-content">
-            <h1>Manage Organizations</h1>
+            <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+                 <h1>Manage Organizations</h1>
+                 <a href="create_organization.php" class="btn btn-success">Create New Organization</a>
+            </div>
             
             <?php if (isset($page_error)): ?><div class="alert alert-error"><?= htmlspecialchars($page_error) ?></div><?php endif; ?>
             <?php if ($error): ?><div class="alert alert-error"><?= htmlspecialchars($error) ?></div><?php endif; ?>
@@ -123,3 +126,4 @@ unset($_SESSION['page_error'], $_SESSION['page_success']);
     <script src="../assets/js/script.js"></script>
 </body>
 </html>
+

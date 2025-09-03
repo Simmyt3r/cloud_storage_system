@@ -92,5 +92,60 @@ public function findAdminForOrg($organization_id) {
     return $stmt->fetch();
 }
 
+    /**
+     * Generates a password reset token for a user.
+     * @param string $email The user's email address.
+     * @return string|false The token on success, or false on failure.
+     */
+    public function generatePasswordResetToken(string $email) {
+        $user = $this->findByEmail($email);
+        if (!$user) {
+            return false;
+        }
+
+        try {
+            $token = bin2hex(random_bytes(32));
+            $expires = new DateTime('+1 hour');
+            $expires_str = $expires->format('Y-m-d H:i:s');
+
+            $stmt = $this->pdo->prepare("UPDATE users SET password_reset_token = ?, password_reset_expires = ? WHERE id = ?");
+            if ($stmt->execute([$token, $expires_str, $user['id']])) {
+                return $token;
+            }
+            return false;
+        } catch (Exception $e) {
+            error_log("Token generation failed: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Finds a user by a valid (non-expired) password reset token.
+     * @param string $token The reset token.
+     * @return mixed The user record or false if not found/expired.
+     */
+    public function findUserByResetToken(string $token) {
+        $stmt = $this->pdo->prepare("SELECT * FROM users WHERE password_reset_token = ? AND password_reset_expires > NOW()");
+        $stmt->execute([$token]);
+        return $stmt->fetch();
+    }
+
+    /**
+     * Updates a user's password and clears the reset token.
+     * @param string $token The reset token.
+     * @param string $newPassword The new password.
+     * @return bool True on success, false on failure.
+     */
+    public function resetPassword(string $token, string $newPassword) {
+        $user = $this->findUserByResetToken($token);
+        if (!$user) {
+            return false; // Token is invalid or expired
+        }
+
+        $new_password_hash = password_hash($newPassword, PASSWORD_DEFAULT);
+        $stmt = $this->pdo->prepare("UPDATE users SET password_hash = ?, password_reset_token = NULL, password_reset_expires = NULL WHERE id = ?");
+        return $stmt->execute([$new_password_hash, $user['id']]);
+    }
 }
 ?>
+

@@ -8,6 +8,12 @@ $org_model = new Organization($pdo);
 
 // Handle organization registration
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register_org'])) {
+    // SECURITY: Only a logged-in super admin can create a new organization
+    if (!is_logged_in() || !is_super_admin()) {
+        $_SESSION['page_error'] = "You do not have permission to perform this action.";
+        redirect('../views/login.php');
+    }
+
     $org_name = sanitize_input($_POST['org_name']);
     $org_description = sanitize_input($_POST['org_description']);
     $admin_username = sanitize_input($_POST['admin_username']);
@@ -35,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register_org'])) {
                 // Create admin user for the organization
                 if ($user_model->create($organization_id, $admin_username, $admin_email, $admin_password, 
                                        $admin_first_name, $admin_last_name, 'admin')) {
-                    $success = "Organization registration request submitted successfully. Please wait for approval.";
+                    $success = "Organization and admin account created successfully.";
                 } else {
                     $error = "Failed to create admin user.";
                     // Delete the organization since we couldn't create the admin user
@@ -45,6 +51,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register_org'])) {
         } else {
             $error = "Failed to register organization.";
         }
+    }
+    // Redirect back to the creation page on error, or manage page on success
+    if (isset($error)) {
+        $_SESSION['form_error'] = $error;
+        redirect('../views/create_organization.php');
+    } else {
+        $_SESSION['page_success'] = $success;
+        redirect('../views/manage_organizations.php');
     }
 }
 
@@ -63,12 +77,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register_user'])) {
     } else {
         // Create user
         if ($user_model->create($organization_id, $username, $email, $password, $first_name, $last_name)) {
-            $success = "User registered successfully.";
+            $success = "User registered successfully. An administrator will need to activate your account.";
             
         } else {
             $error = "Failed to register user.";
         }
     }
+    // Redirect back to the registration page with feedback
+    if (isset($error)) {
+        $_SESSION['form_error'] = $error;
+    } else {
+        $_SESSION['form_success'] = $success;
+    }
+    redirect('../views/register_user.php');
 }
-redirect('../views/login.php');
 ?>
+

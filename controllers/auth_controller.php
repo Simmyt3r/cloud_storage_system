@@ -7,16 +7,6 @@ session_start();
 require_once '../includes/config.php';
 require_once '../models/User.php';
 
-// --- HELPER FUNCTIONS ---
-// If these are in your config.php, you can remove them from here.
-// I'm adding them so the script is self-contained and demonstrates the fix.
-
-/**
- * Redirects to a new page and stops script execution.
- * @param string $url The URL to redirect to.
- */
-
-
 // --- INITIALIZATION ---
 // Initialize the user model
 $user_model = new User($pdo);
@@ -77,33 +67,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     }
 }
 
+// --- PASSWORD RESET LOGIC ---
 
-// --- LOGOUT LOGIC ---
-// Checks if 'logout' is present in the URL (e.g., your-site.com/auth_controller.php?logout=1)
-if (isset($_GET['logout'])) {
-    // Unset all session variables like user_id, username, etc.
-    session_unset();
-    
-    // Destroy the session data on the server
-    session_destroy();
-    
-    // Redirect the user back to the login page
-    redirect('../views/login.php');
+// Handle "Forgot Password" form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_reset'])) {
+    $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
+    $token = $user_model->generatePasswordResetToken($email);
+
+    if ($token) {
+        // In a real application, you would email this link.
+        // For this demo, we'll display it in the success message.
+        $reset_link = BASE_URL . '/views/reset_password.php?token=' . urlencode($token);
+        $message = "Password reset link has been generated. In a real app, this would be emailed. For now, please click here: <a href='{$reset_link}'>Reset Password</a>";
+        $_SESSION['page_success'] = $message;
+    } else {
+        // Show a generic message to prevent email enumeration
+        $_SESSION['page_success'] = "If an account with that email exists, a password reset link has been sent.";
+    }
+    redirect('../views/forgot_password.php');
 }
-/*
- * --- IMPORTANT ---
- * To display the login error message, add the following PHP code to your
- * `login.php` file, right before the login form.
- *
- * <?php
- * // Make sure session is started at the top of login.php
- * // session_start();
- * * if (isset($_SESSION['login_error'])) {
- * echo '<p style="color: red;">' . $_SESSION['login_error'] . '</p>';
- * unset($_SESSION['login_error']); // Clear message after displaying it
- * }
- * ?>
- *
- */
+
+
+// Handle "Reset Password" form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_password'])) {
+    $token = $_POST['token'];
+    $password = $_POST['password'];
+    $confirm_password = $_POST['confirm_password'];
+
+    if ($password !== $confirm_password) {
+        $_SESSION['page_error'] = "Passwords do not match.";
+        redirect('../views/reset_password.php?token=' . urlencode($token));
+    }
+
+    if (strlen($password) < 8) { // Basic password strength check
+        $_SESSION['page_error'] = "Password must be at least 8 characters long.";
+        redirect('../views/reset_password.php?token=' . urlencode($token));
+    }
+
+    if ($user_model->resetPassword($token, $password)) {
+        $_SESSION['login_success'] = "Your password has been reset successfully. You can now log in.";
+        redirect('../views/login.php');
+    } else {
+        $_SESSION['page_error'] = "Invalid or expired password reset link. Please try again.";
+        redirect('../views/forgot_password.php');
+    }
+}
 ?>
 
