@@ -95,7 +95,7 @@ unset($_SESSION['form_error'], $_SESSION['form_success']);
             <div class="form-container">
                 <form action="../controllers/register_controller.php" method="POST">
                     <div class="form-group">
-                        <label for="organization_id">Department:</label>
+                        <label for="organization_id">Organization:</label>
                         <select id="organization_id" name="organization_id" required>
                             <option value="">Select</option>
                             <?php foreach ($approved_organizations as $org): ?>
