@@ -41,7 +41,7 @@ if (is_logged_in()) {
             <nav>
                 <ul>
                   <!--  <li><a href="login.php">Login</a></li>-->
-                    <!--<li><a href="register_org.php">Register Organization</a></li> -->
+                    <li><a href="register_organization.php">Register Organization</a></li> 
                     <li><a href="register_user.php">Register User</a></li>
                 </ul>
             </nav>
@@ -80,4 +80,3 @@ if (is_logged_in()) {
     <script src="../assets/js/script.js"></script>
 </body>
 </html>
-

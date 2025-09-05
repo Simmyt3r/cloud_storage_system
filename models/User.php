@@ -7,12 +7,15 @@ class User {
     }
     
     // Create a new user
-    public function create($organization_id, $username, $email, $password, $first_name, $last_name, $role = 'user') {
+    public function create($organization_id, $username, $email, $password, $first_name, $last_name, $role = 'user', $is_active = 0) {
         $password_hash = password_hash($password, PASSWORD_DEFAULT);
         
-        $stmt = $this->pdo->prepare("INSERT INTO users (organization_id, username, email, password_hash, first_name, last_name, role) 
-                                    VALUES (?, ?, ?, ?, ?, ?, ?)");
-        return $stmt->execute([$organization_id, $username, $email, $password_hash, $first_name, $last_name, $role]);
+        $stmt = $this->pdo->prepare("INSERT INTO users (organization_id, username, email, password_hash, first_name, last_name, role, is_active) 
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        if ($stmt->execute([$organization_id, $username, $email, $password_hash, $first_name, $last_name, $role, $is_active])) {
+            return $this->pdo->lastInsertId();
+        }
+        return false;
     }
     
     // Find user by username
@@ -34,6 +37,36 @@ class User {
         $stmt = $this->pdo->prepare("SELECT * FROM users WHERE id = ?");
         $stmt->execute([$id]);
         return $stmt->fetch();
+    }
+
+    /**
+     * Updates a user's details. Can handle partial updates.
+     *
+     * @param int $user_id The user ID.
+     * @param array $data Associative array of data to update.
+     * @return bool
+     */
+    public function update($user_id, $data) {
+        $fields = [];
+        $params = [];
+
+        if (isset($data['first_name'])) { $fields[] = 'first_name = ?'; $params[] = $data['first_name']; }
+        if (isset($data['last_name'])) { $fields[] = 'last_name = ?'; $params[] = $data['last_name']; }
+        if (isset($data['email'])) { $fields[] = 'email = ?'; $params[] = $data['email']; }
+        if (!empty($data['password'])) { $fields[] = 'password_hash = ?'; $params[] = password_hash($data['password'], PASSWORD_DEFAULT); }
+        if (isset($data['role'])) { $fields[] = 'role = ?'; $params[] = $data['role']; }
+        if (isset($data['organization_id'])) { $fields[] = 'organization_id = ?'; $params[] = $data['organization_id']; }
+        if (isset($data['is_active'])) { $fields[] = 'is_active = ?'; $params[] = $data['is_active']; }
+        
+        if (empty($fields)) {
+            return false;
+        }
+
+        $sql = "UPDATE users SET " . implode(', ', $fields) . " WHERE id = ?";
+        $params[] = $user_id;
+
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute($params);
     }
     
     // Authenticate user
@@ -64,33 +97,51 @@ class User {
         $stmt = $this->pdo->prepare("SELECT u.id, u.username, u.email, u.first_name, u.last_name, u.role, u.is_active, 
                                     u.created_at, u.last_login, o.name as organization_name 
                                     FROM users u LEFT JOIN organizations o ON u.organization_id = o.id 
-                                    ORDER BY u.organization_id, u.username");
+                                    ORDER BY o.name, u.username");
         $stmt->execute();
         return $stmt->fetchAll();
     }
 
-   // Add these new methods to your existing User class in models/User.php
+    /**
+     * Activates a user account.
+     * @param int $user_id The ID of the user to activate.
+     * @return bool True on success, false on failure.
+     */
+    public function activate($user_id) {
+        return $this->update($user_id, ['is_active' => 1]);
+    }
 
-/**
- * Activates a user account.
- * @param int $user_id The ID of the user to activate.
- * @return bool True on success, false on failure.
- */
-public function activate($user_id) {
-    $stmt = $this->pdo->prepare("UPDATE users SET is_active = 1 WHERE id = ?");
-    return $stmt->execute([$user_id]);
-}
+    /**
+     * Updates a user's role.
+     * @param int $user_id The ID of the user to update.
+     * @param string $role The new role.
+     * @return bool
+     */
+    public function updateUserRole($user_id, $role) {
+        return $this->update($user_id, ['role' => $role]);
+    }
 
-/**
- * Finds the administrative user for a given organization.
- * @param int $organization_id The ID of the organization.
- * @return mixed The user record or false if not found.
- */
-public function findAdminForOrg($organization_id) {
-    $stmt = $this->pdo->prepare("SELECT * FROM users WHERE organization_id = ? AND role = 'admin' LIMIT 1");
-    $stmt->execute([$organization_id]);
-    return $stmt->fetch();
-}
+    /**
+     * Deletes a user from the database.
+     * @param int $user_id The ID of the user to delete.
+     * @return bool
+     */
+    public function delete($user_id) {
+        $stmt = $this->pdo->prepare("DELETE FROM users WHERE id = ?");
+        return $stmt->execute([$user_id]);
+    }
+
+
+    /**
+     * Finds the administrative user for a given organization.
+     * @param int $organization_id The ID of the organization.
+     * @return mixed The user record or false if not found.
+     */
+    public function findAdminForOrg($organization_id) {
+        $stmt = $this->pdo->prepare("SELECT * FROM users WHERE organization_id = ? AND role = 'admin' LIMIT 1");
+        $stmt->execute([$organization_id]);
+        return $stmt->fetch();
+    }
 
     /**
      * Generates a password reset token for a user.

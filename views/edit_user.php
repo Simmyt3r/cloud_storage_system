@@ -1,9 +1,9 @@
 <?php
 /**
- * Edit User Page
+ * Edit User Page (Revised)
  *
- * Allows admins to modify user details. Super admins have extended
- * privileges to change roles and organizations.
+ * Allows admins to modify user details with proper feedback and navigation.
+ * Super admins have extended privileges.
  */
 
 // --- 1. INITIALIZATION & SECURITY ---
@@ -33,13 +33,11 @@ try {
     
     $user = $user_model->findById($user_id_to_edit);
 
-    // Security check: Ensure user exists
     if (!$user) {
         $_SESSION['page_error'] = "User not found.";
         redirect('manage_users.php');
     }
 
-    // Security check for regular admins: Can only edit users in their own org
     if (is_admin() && !is_super_admin()) {
         if ($user['organization_id'] !== get_user_organization_id()) {
             $_SESSION['page_error'] = "You do not have permission to edit this user.";
@@ -47,7 +45,6 @@ try {
         }
     }
     
-    // For super admins, fetch all organizations for the dropdown
     $organizations = is_super_admin() ? $org_model->getAll() : [];
 
 } catch (PDOException $e) {
@@ -56,6 +53,10 @@ try {
     redirect('manage_users.php');
 }
 
+// --- 3. FLASH MESSAGES ---
+$error = $_SESSION['page_error'] ?? null;
+$success = $_SESSION['page_success'] ?? null;
+unset($_SESSION['page_error'], $_SESSION['page_success']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -67,13 +68,30 @@ try {
 </head>
 <body>
     <header>
-        <!-- Header navigation from your manage_users.php can be copied here -->
+        <div class="header-content">
+            <div class="logo"><?= htmlspecialchars(APP_NAME) ?></div>
+            <nav>
+                <ul>
+                    <?php if (is_super_admin()): ?>
+                        <li><a href="super_admin_dashboard.php">Dashboard</a></li>
+                        <li><a href="manage_organizations.php">Organizations</a></li>
+                    <?php else: ?>
+                        <li><a href="admin_dashboard.php">Dashboard</a></li>
+                    <?php endif; ?>
+                    <li><a href="manage_users.php">Manage Users</a></li>
+                    <li><a href="../controllers/auth_controller.php?logout=1">Logout</a></li>
+                </ul>
+            </nav>
+        </div>
     </header>
     
     <div class="container">
         <div class="main-content">
             <h1>Edit User: <?= htmlspecialchars($user['first_name'] . ' ' . $user['last_name']) ?></h1>
             
+            <?php if (isset($error)): ?><div class="alert alert-error"><?= htmlspecialchars($error) ?></div><?php endif; ?>
+            <?php if (isset($success)): ?><div class="alert alert-success"><?= htmlspecialchars($success) ?></div><?php endif; ?>
+
             <div class="form-container">
                 <form action="../controllers/admin_controller.php" method="POST">
                     <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
@@ -101,11 +119,14 @@ try {
                     <?php if (is_super_admin()): ?>
                         <div class="form-group">
                             <label for="role">Role:</label>
-                            <select id="role" name="role">
+                            <select id="role" name="role" <?= $user['role'] === 'super_admin' ? 'disabled' : '' ?>>
                                 <option value="user" <?= $user['role'] === 'user' ? 'selected' : '' ?>>User</option>
                                 <option value="admin" <?= $user['role'] === 'admin' ? 'selected' : '' ?>>Admin</option>
                                 <option value="super_admin" <?= $user['role'] === 'super_admin' ? 'selected' : '' ?>>Super Admin</option>
                             </select>
+                             <?php if ($user['role'] === 'super_admin'): ?>
+                                <small>The Super Admin role cannot be changed.</small>
+                            <?php endif; ?>
                         </div>
                         <div class="form-group">
                             <label for="organization_id">Organization:</label>
@@ -127,62 +148,10 @@ try {
                     <?php endif; ?>
 
                     <button type="submit" name="update_user" class="btn btn-success">Update User</button>
-                    <a href="manage_users.php" class="btn btn-secondary">Cancel</a>
+                    <a href="manage_users.php" class="btn">Cancel</a>
                 </form>
             </div>
         </div>
     </div>
 </body>
 </html>
-```
-
-### 2. Update `controllers/admin_controller.php`
-
-Now, add the logic to your admin controller to handle the form submission from the new edit page.
-
-```php
-// Inside controllers/admin_controller.php
-
-// --- ACTION ROUTING ---
-// ... add this line to your routing logic ...
-if (isset($_POST['update_user'])) $action = 'update_user';
-
-// ... add this case to your switch statement ...
-case 'update_user':
-    handle_user_update($user_model);
-    break;
-
-// ... add this new handler function at the bottom of the file ...
-/**
- * Handles updating a user's details.
- */
-function handle_user_update($user_model) {
-    $user_id = (int)$_POST['user_id'];
-    $data = [
-        'first_name' => sanitize_input($_POST['first_name']),
-        'last_name'  => sanitize_input($_POST['last_name']),
-        'email'      => filter_var($_POST['email'], FILTER_SANITIZE_EMAIL),
-        'password'   => $_POST['password'] // Pass it directly, model will handle hashing if not empty
-    ];
-
-    // Super admins can change role, organization, and status
-    if (is_super_admin()) {
-        $data['role'] = $_POST['role'];
-        $data['organization_id'] = (int)$_POST['organization_id'];
-        $data['is_active'] = (int)$_POST['is_active'];
-    }
-
-    // Security check: Ensure the admin has permission to edit this user
-    $user_to_edit = $user_model->findById($user_id);
-    if (!is_super_admin() && $user_to_edit['organization_id'] !== get_user_organization_id()) {
-        throw new Exception("You do not have permission to edit this user.");
-    }
-    
-    if ($user_model->update($user_id, $data)) {
-        $_SESSION['page_success'] = "User updated successfully.";
-    } else {
-        throw new Exception("Failed to update user details.");
-    }
-    
-    redirect('../views/manage_users.php');
-}

@@ -7,9 +7,9 @@ class Organization {
     }
     
     // Create a new organization
-    public function create($name, $description = '') {
-        $stmt = $this->pdo->prepare("INSERT INTO organizations (name, description) VALUES (?, ?)");
-        return $stmt->execute([$name, $description]);
+    public function create($name, $description = '', $requested_by = null) {
+        $stmt = $this->pdo->prepare("INSERT INTO organizations (name, description, requested_by) VALUES (?, ?, ?)");
+        return $stmt->execute([$name, $description, $requested_by]);
     }
     
     // Find organization by ID
