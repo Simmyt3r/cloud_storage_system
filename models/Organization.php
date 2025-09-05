@@ -9,7 +9,10 @@ class Organization {
     // Create a new organization
     public function create($name, $description = '', $requested_by = null) {
         $stmt = $this->pdo->prepare("INSERT INTO organizations (name, description, requested_by) VALUES (?, ?, ?)");
-        return $stmt->execute([$name, $description, $requested_by]);
+        if ($stmt->execute([$name, $description, $requested_by])) {
+            return $this->pdo->lastInsertId();
+        }
+        return false;
     }
     
     // Find organization by ID
@@ -28,7 +31,31 @@ class Organization {
     
     // Get all organizations
     public function getAll() {
-        $stmt = $this->pdo->prepare("SELECT * FROM organizations ORDER BY name");
+        $stmt = $this->pdo->prepare("SELECT o.*, u.username as approved_by_username 
+                                    FROM organizations o 
+                                    LEFT JOIN users u ON o.approved_by = u.id 
+                                    ORDER BY o.name");
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Gathers statistics for all organizations, including user count and storage usage.
+     * @return array An array of organizations with their stats.
+     */
+    public function getOrganizationStats() {
+        $sql = "SELECT 
+                    o.id, 
+                    o.name, 
+                    COUNT(DISTINCT u.id) as user_count, 
+                    COALESCE(SUM(f.file_size), 0) as storage_used
+                FROM organizations o
+                LEFT JOIN users u ON o.id = u.organization_id
+                LEFT JOIN files f ON o.id = f.organization_id
+                WHERE o.approved = 1
+                GROUP BY o.id, o.name
+                ORDER BY o.name";
+        $stmt = $this->pdo->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll();
     }
@@ -42,7 +69,10 @@ class Organization {
     
     // Get all pending organizations
     public function getPending() {
-        $stmt = $this->pdo->prepare("SELECT * FROM organizations WHERE approved = FALSE ORDER BY created_at");
+        $stmt = $this->pdo->prepare("SELECT o.*, u.username as requested_by_username
+                                    FROM organizations o
+                                    LEFT JOIN users u ON o.requested_by = u.id
+                                    WHERE o.approved = FALSE ORDER BY o.created_at");
         $stmt->execute();
         return $stmt->fetchAll();
     }
@@ -59,8 +89,6 @@ class Organization {
         $stmt = $this->pdo->prepare("DELETE FROM organizations WHERE id = ?");
         return $stmt->execute([$id]);
     }
-
-    
-
 }
 ?>
+

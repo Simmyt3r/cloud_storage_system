@@ -34,6 +34,23 @@ class File {
         $stmt->execute([$organization_id]);
         return $stmt->fetchAll();
     }
+
+    /**
+     * Gets the distribution of file types across the entire system.
+     * @return array An array of file types and their counts.
+     */
+    public function getFileTypeDistribution() {
+        $sql = "SELECT 
+                    SUBSTRING_INDEX(name, '.', -1) as extension, 
+                    COUNT(id) as count
+                FROM files
+                GROUP BY extension
+                ORDER BY count DESC
+                LIMIT 10"; // Get top 10 file types
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
     
     // Delete file
     public function delete($id) {

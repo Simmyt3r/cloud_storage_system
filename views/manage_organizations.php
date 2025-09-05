@@ -8,7 +8,7 @@
 
 // --- 1. INITIALIZATION & SECURITY ---
 // Always start the session at the very top of the script.
-session_start();
+//session_start();
 
 // Include necessary configuration and model files.
 require_once '../includes/config.php';
