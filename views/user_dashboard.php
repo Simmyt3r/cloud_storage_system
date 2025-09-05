@@ -245,7 +245,7 @@ unset($_SESSION['page_error'], $_SESSION['page_success']);
                 </div>
             </div>
             
-            <p>Welcome, <?= htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']) ?>! (Department: <?= htmlspecialchars($organization['name'] ?? 'Unknown') ?>)</p>
+            <p>Welcome: <?= htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']) ?><br /> Organization: <?= htmlspecialchars($organization['name'] ?? 'Unknown') ?>)</p>
             
             <?php if (isset($page_error)): ?><div class="alert alert-error"><?= htmlspecialchars($page_error) ?></div><?php endif; ?>
             <?php if ($error): ?><div class="alert alert-error"><?= htmlspecialchars($error) ?></div><?php endif; ?>
