@@ -102,3 +102,6 @@ unset($_SESSION['form_error'], $_SESSION['form_success']);
     </div>
 </body>
 </html>
+<?php
+include "footer.php";
+?>

@@ -8,7 +8,7 @@
 
 // --- 1. INITIALIZATION & SECURITY ---
 // Always start the session at the very top of the script.
-session_start();
+//session_start();
 
 // Include necessary configuration and model files.
 require_once '../includes/config.php';
@@ -187,3 +187,5 @@ unset($_SESSION['page_error'], $_SESSION['page_success']);
     <script src="../assets/js/script.js"></script>
 </body>
 </html>
+<?php
+include "footer.php";

@@ -20,8 +20,7 @@ require_once 'db_connection.php';
 
 function redirect($url) {
     header('Location: ' . $url);
-    // 2. ALWAYS call exit() after a header redirect.
-    exit();
+        exit();
 }
 
 /**

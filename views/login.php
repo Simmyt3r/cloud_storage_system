@@ -37,7 +37,7 @@ if (is_logged_in()) {
 <body>
     <header>
         <div class="header-content">
-            <div class="logo"><?php echo APP_NAME; ?></div>
+            <div class="logo"><i class="fas fa-cloud"></i><?php echo APP_NAME; ?></div>
             <nav>
                 <ul>
                   <!--  <li><a href="login.php">Login</a></li>-->
@@ -76,7 +76,10 @@ if (is_logged_in()) {
             </div>
         </div>
     </div>
-    
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="../assets/js/script.js"></script>
 </body>
 </html>
+<?php
+include ('footer.php');
+?>

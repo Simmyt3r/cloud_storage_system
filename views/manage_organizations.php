@@ -126,4 +126,6 @@ unset($_SESSION['page_error'], $_SESSION['page_success']);
     <script src="../assets/js/script.js"></script>
 </body>
 </html>
-
+<?php
+include "footer.php";
+?>

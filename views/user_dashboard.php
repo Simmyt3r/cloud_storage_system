@@ -452,3 +452,6 @@ unset($_SESSION['page_error'], $_SESSION['page_success']);
 </body>
 </html>
 
+<?php
+include "footer.php";
+?>

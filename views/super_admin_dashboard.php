@@ -1,6 +1,5 @@
 <?php
 /**
- * Super Admin Dashboard Page (with Charts)
  * Provides a visual overview of the system using charts and graphs.
  */
 //session_start();

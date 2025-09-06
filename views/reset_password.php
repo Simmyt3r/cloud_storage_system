@@ -75,3 +75,6 @@ unset($_SESSION['page_error']);
     </div>
 </body>
 </html>
+<?php
+include "footer.php";
+?>

@@ -1,7 +1,7 @@
 <?php
 require_once 'includes/config.php';
 
-// If user is logged in, redirect to appropriate dashboard
+// If a user is logged in, this block will redirect to appropriate dashboard
 if (is_logged_in()) {
     if (is_super_admin()) {
         redirect('views/super_admin_dashboard.php');
@@ -11,7 +11,7 @@ if (is_logged_in()) {
         redirect('views/user_dashboard.php');
     }
 } else {
-    // If not logged in, redirect to login page
+    // If the user is not logged in, this line of code will redirect the user to login page
     redirect('views/login.php');
 }
 ?>
