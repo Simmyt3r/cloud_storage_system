@@ -95,7 +95,7 @@ unset($_SESSION['page_error'], $_SESSION['page_success']);
 <body>
     <header>
         <div class="header-content">
-            <div class="logo"><?= htmlspecialchars(APP_NAME) ?></div>
+            <div class="logo"><i class="fas fa-cloud"> </i> <?= htmlspecialchars(APP_NAME) ?></div>
             <nav>
                 <ul>
                     <li><a href="admin_dashboard.php">Dashboard</a></li>
@@ -183,7 +183,7 @@ unset($_SESSION['page_error'], $_SESSION['page_success']);
             </div>
         </div>
     </div>
-    
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="../assets/js/script.js"></script>
 </body>
 </html>
