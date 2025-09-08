@@ -72,11 +72,11 @@ unset($_SESSION['page_error'], $_SESSION['page_success']);
 <body>
     <header>
         <div class="header-content">
-            <div class="logo"><?= htmlspecialchars(APP_NAME) ?></div>
+             <div class="logo"><i class="fas fa-cloud"> </i> <?= htmlspecialchars(APP_NAME) ?></div>
             <nav>
                 <ul>
-                    <li><a href="super_admin_dashboard.php">Dashboard</a></li>
-                    <li><a href="manage_organizations.php">Manage Organizations</a></li>
+                    <li><a href="super_admin_dashboard.php"><i class="fas fa-home"> </i> Dashboard</a></li>
+                    <li><a href="manage_organizations.php"><i class="fas fa-setting"> </i> Manage Organizations</a></li>
                     <li><a href="manage_users.php">Manage Users</a></li>
                     <li><a href="../controllers/auth_controller.php?logout=1">Logout</a></li>
                 </ul>
@@ -222,6 +222,7 @@ unset($_SESSION['page_error'], $_SESSION['page_success']);
         });
     });
     </script>
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </body>
 </html>
 

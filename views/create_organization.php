@@ -32,7 +32,7 @@ unset($_SESSION['form_error'], $_SESSION['form_success']);
 <body>
     <header>
         <div class="header-content">
-            <div class="logo"><?= htmlspecialchars(APP_NAME) ?></div>
+            <div class="logo"><i class="fas fa-cloud"> </i> <?= htmlspecialchars(APP_NAME) ?></div>
             <nav>
                 <ul>
                     <li><a href="super_admin_dashboard.php">Dashboard</a></li>
