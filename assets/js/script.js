@@ -1,105 +1,145 @@
-// Cloud Storage System JavaScript
-
-// Function to show modal
-function showModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = "block";
-    }
-}
-
-// Function to hide modal
-function hideModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = "none";
-    }
-}
-
-// Close modal when clicking on the close button
-document.addEventListener('click', function(e) {
-    if (e.target && e.target.classList.contains('close')) {
-        const modal = e.target.closest('.modal');
-        if (modal) {
-            modal.style.display = "none";
-        }
-    }
-});
-
-// Close modal when clicking outside of it
-window.addEventListener('click', function(e) {
-    document.querySelectorAll('.modal').forEach(modal => {
-        if (e.target === modal) {
-            modal.style.display = "none";
-        }
-    });
-});
-
-// Function to confirm deletion
-function confirmDelete(formId, itemName) {
-    if (confirm(`Are you sure you want to delete ${itemName}? This action cannot be undone.`)) {
-        document.getElementById(formId).submit();
-    }
-}
-
-// Function to toggle password visibility
-function togglePasswordVisibility(inputId, buttonId) {
-    const passwordInput = document.getElementById(inputId);
-    const toggleButton = document.getElementById(buttonId);
-    
-    if (passwordInput.type === "password") {
-        passwordInput.type = "text";
-        toggleButton.textContent = "Hide";
-    } else {
-        passwordInput.type = "password";
-        toggleButton.textContent = "Show";
-    }
-}
-
-// Function to validate form
-function validateForm(formId, requiredFields) {
-    const form = document.getElementById(formId);
-    let isValid = true;
-    
-    requiredFields.forEach(fieldId => {
-        const field = document.getElementById(fieldId);
-        if (!field.value.trim()) {
-            field.style.borderColor = "red";
-            isValid = false;
-        } else {
-            field.style.borderColor = "#ddd";
-        }
-    });
-    
-    return isValid;
-}
-
-// Function to format file size
-function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
-// Initialize file size formatting on page load
 document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.file-size').forEach(element => {
-        const bytes = parseInt(element.textContent);
-        if (!isNaN(bytes)) {
-            element.textContent = formatFileSize(bytes);
+    // --- Right-Click Context Menu ---
+    const contextMenu = createContextMenu();
+    let currentItem = null;
+
+    document.querySelectorAll('.file-table tr[data-id], .grid-item[data-id]').forEach(item => {
+        item.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            currentItem = this;
+            const type = this.dataset.type;
+            updateContextMenu(type);
+            contextMenu.style.top = `${e.clientY}px`;
+            contextMenu.style.left = `${e.clientX}px`;
+            contextMenu.style.display = 'block';
+        });
+    });
+
+    window.addEventListener('click', () => {
+        contextMenu.style.display = 'none';
+    });
+
+    function createContextMenu() {
+        const menu = document.createElement('ul');
+        menu.className = 'context-menu';
+        document.body.appendChild(menu);
+        return menu;
+    }
+
+    function updateContextMenu(type) {
+        contextMenu.innerHTML = ''; // Clear previous items
+        const actions = (type === 'folder')
+            ? ['Open', 'Rename', 'Delete']
+            : ['View', 'Download', 'Rename', 'Delete'];
+
+        actions.forEach(action => {
+            const li = document.createElement('li');
+            li.textContent = action;
+            li.dataset.action = action.toLowerCase();
+            if (action === 'Delete') {
+                li.classList.add('delete');
+            }
+            contextMenu.appendChild(li);
+        });
+    }
+
+    contextMenu.addEventListener('click', function(e) {
+        if (e.target.tagName === 'LI' && currentItem) {
+            const action = e.target.dataset.action;
+            const id = currentItem.dataset.id;
+            // Add your logic for each action here
+            alert(`${action} on ${currentItem.dataset.type} with ID ${id}`);
         }
     });
-});
 
-// Function to show folder password modal
-function showFolderPasswordModal(folderId) {
-    const modal = document.getElementById('folderPasswordModal');
-    if (modal) {
-        document.getElementById('folder_id').value = folderId;
-        modal.style.display = "block";
+
+    // --- Drag and Drop File Upload ---
+    const dropZone = document.getElementById('drop-zone');
+    const uploadForm = document.getElementById('upload-form');
+
+    if (dropZone) {
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && uploadForm) {
+                uploadForm.querySelector('input[type="file"]').files = files;
+                handleFiles(files);
+            }
+        });
     }
-}
+
+    function handleFiles(files) {
+        const fileList = document.getElementById('file-list-display');
+        if (!fileList) return;
+        fileList.innerHTML = '';
+
+        [...files].forEach(file => {
+            const fileElement = document.createElement('div');
+            fileElement.textContent = `${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+            
+            const progressBar = document.createElement('div');
+            progressBar.className = 'progress-bar';
+            const fill = document.createElement('div');
+            fill.className = 'progress-bar-fill';
+            progressBar.appendChild(fill);
+            fileElement.appendChild(progressBar);
+            fileList.appendChild(fileElement);
+
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 10;
+                fill.style.width = progress + '%';
+                if (progress >= 100) {
+                    clearInterval(interval);
+                }
+            }, 200);
+        });
+    }
+
+
+    // --- Search Filtering ---
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function() {
+            const filter = this.value.toLowerCase();
+            const items = document.querySelectorAll('.file-table tr[data-name], .grid-item[data-name]');
+            items.forEach(item => {
+                const name = item.dataset.name.toLowerCase();
+                if (name.includes(filter)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    }
+
+
+    // --- Multi-select with Checkboxes ---
+    const bulkActionsBar = document.getElementById('bulk-actions-bar');
+    const checkboxes = document.querySelectorAll('.item-checkbox');
+
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateBulkActionsBar);
+    });
+
+    function updateBulkActionsBar() {
+        const selectedCount = document.querySelectorAll('.item-checkbox:checked').length;
+        if (selectedCount > 0) {
+            bulkActionsBar.querySelector('#selected-count').textContent = selectedCount;
+            bulkActionsBar.style.display = 'flex';
+        } else {
+            bulkActionsBar.style.display = 'none';
+        }
+    }
+});
