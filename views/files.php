@@ -135,11 +135,14 @@ unset($_SESSION['page_error'], $_SESSION['page_success']);
                                     <td><?= formatFileSize($file['file_size']) ?></td>
                                     <td><?= htmlspecialchars($file['uploaded_by_username']) ?></td>
                                     <td><?= date('M j, Y H:i', strtotime($file['uploaded_at'])) ?></td>
-                                    <td>
-                                        <a href="../controllers/file_controller.php?download=1&file_id=<?= $file['id'] ?>" class="btn btn-sm btn-info">Download</a>
-                                        <button class="btn btn-sm btn-primary rename-btn" data-file-id="<?= $file['id'] ?>" data-file-name="<?= htmlspecialchars($file['name']) ?>">Rename</button>
-                                        <button class="btn btn-sm btn-danger delete-btn" data-file-id="<?= $file['id'] ?>" data-file-name="<?= htmlspecialchars($file['name']) ?>">Delete</button>
-                                    </td>
+                                   // In views/files.php, inside the table body loop
+
+<td>
+   <a href="../views/file_viewer.php?file_id=<?= $file['id'] ?>" class="btn btn-sm btn-info" target="_blank">View</a>
+    <a href="../controllers/file_controller.php?download=1&file_id=<?= $file['id'] ?>" class="btn btn-sm btn-primary">Download</a>
+    <button class="btn btn-sm btn-primary rename-btn" data-file-id="<?= $file['id'] ?>" data-file-name="<?= htmlspecialchars($file['name']) ?>">Rename</button>
+    <button class="btn btn-sm btn-danger delete-btn" data-file-id="<?= $file['id'] ?>" data-file-name="<?= htmlspecialchars($file['name']) ?>">Delete</button>
+</td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>

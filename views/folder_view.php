@@ -170,13 +170,15 @@ unset($_SESSION['page_error'], $_SESSION['page_success']);
                             <p class="name"><?= htmlspecialchars($subfolder['name']) ?></p>
                         </div>
                     <?php endforeach; ?>
-                    <?php foreach ($files as $file): ?>
-                        <div class="grid-item item" data-item-type="file" data-item-id="<?= $file['id'] ?>" data-item-name="<?= htmlspecialchars($file['name']) ?>" data-open-url="../controllers/file_controller.php?download=1&file_id=<?= $file['id'] ?>">
-                            <div class="icon"><?= getFileIcon($file['name']) ?></div>
-                            <p class="name"><?= htmlspecialchars($file['name']) ?></p>
-                            <p class="details"><?= formatFileSize($file['file_size']) ?></p>
-                        </div>
-                    <?php endforeach; ?>
+                   
+<?php foreach ($files as $file): ?>
+   <div class="grid-item item" data-open-url="../views/file_viewer.php?file_id=<?= $file['id'] ?>">
+
+        <div class="icon"><?= getFileIcon($file['name']) ?></div>
+        <p class="name"><?= htmlspecialchars($file['name']) ?></p>
+        <p class="details"><?= formatFileSize($file['file_size']) ?></p>
+    </div>
+<?php endforeach; ?>
                 </div>
                 <?php if (empty($subfolders) && empty($files)): ?>
                     <div class="empty-state"><p>This folder is empty.</p></div>

@@ -154,8 +154,10 @@ function handle_file_upload($pdo, $file_model, $permission_model) {
     redirect('../views/user_dashboard.php');
 }
 
+// In controllers/file_controller.php
+
 /**
- * Handles the logic for downloading a file.
+ * Handles the logic for viewing or downloading a file.
  */
 function handle_file_download($pdo, $file_model, $permission_model) {
     $file_id = (int)$_GET['file_id'];
@@ -180,12 +182,15 @@ function handle_file_download($pdo, $file_model, $permission_model) {
 
     header('Content-Description: File Transfer');
     header('Content-Type: ' . $file['mime_type']);
-    header('Content-Disposition: attachment; filename="' . basename($file['name']) . '"');
+
+    // Use 'inline' to display in browser, 'attachment' to force download
+    header('Content-Disposition: inline; filename="' . basename($file['name']) . '"');
+
     header('Expires: 0');
     header('Cache-Control: must-revalidate');
     header('Pragma: public');
     header('Content-Length: ' . filesize($file['file_path']));
-    
+
     ob_clean();
     flush();
     readfile($file['file_path']);
@@ -217,7 +222,7 @@ function handle_file_rename($pdo, $file_model, $permission_model) {
     } else {
         throw new Exception("Failed to rename the file in the database.");
     }
-    redirect_back();
+    redirect('../index.php');
 }
 
 /**
