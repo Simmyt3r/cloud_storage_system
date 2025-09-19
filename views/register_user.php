@@ -66,7 +66,7 @@ unset($_SESSION['form_error'], $_SESSION['form_success']);
     <header>
         <div class="header-content">
             <div class="logo"><?= htmlspecialchars(APP_NAME) ?></div>
-            <nav>
+            <nav class="sidebar">
                 <ul>
                     <li><a href="login.php">Login</a></li>
                   <!--  <li><a href="register_org.php">Register Organization</a></li>-->

@@ -3,7 +3,7 @@
 session_start();
 
 // Base URL of the application
-define('BASE_URL', 'http://localhost/cloud_storage_system');
+define('BASE_URL', 'http://localhost/cloud_storage_system-1');
 
 // Upload directory
 define('UPLOAD_DIR', __DIR__ . '/../uploads/');

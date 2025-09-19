@@ -38,7 +38,7 @@ if (is_logged_in()) {
     <header>
         <div class="header-content">
             <div class="logo"><i class="fas fa-cloud"></i><?php echo APP_NAME; ?></div>
-            <nav>
+            <nav class="sidebar">
                 <ul>
                   <!--  <li><a href="login.php">Login</a></li>-->
                     <li><a href="register_organization.php">Register Organization</a></li> 
