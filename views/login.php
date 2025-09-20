@@ -31,55 +31,65 @@ if (is_logged_in()) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo APP_NAME; ?> - Login</title>
+    <title><?= htmlspecialchars(APP_NAME) ?> Login</title>
     <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
-    <header>
-        <div class="header-content">
-            <div class="logo"><i class="fas fa-cloud"></i><?php echo APP_NAME; ?></div>
-            <nav class="sidebar">
-                <ul>
-                  <!--  <li><a href="login.php">Login</a></li>-->
-                    <li><a href="register_organization.php">Register Organization</a></li> 
-                    <li><a href="register_user.php">Register User</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+<body class="auth-page">
+
+<header>
+    <a href="../index.php" class="logo"><i class="fas fa-cloud"></i> <?= htmlspecialchars(APP_NAME) ?></a>
     
-    <div class="container">
-        <div class="main-content">
-            <h1>User Login</h1>
-            
-            <?php if (isset($error)): ?>
-                <div class="alert alert-error"><?php echo $error; ?></div>
-            <?php endif; ?>
-            
-            <div class="form-container">
-                <form action="../controllers/auth_controller.php" method="POST">
-                    <div class="form-group">
-                        <label for="username">Username:</label>
-                        <input type="text" id="username" name="username" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="password">Password:</label>
-                        <input type="password" id="password" name="password" required>
-                    </div>
-                    
-                    <button type="submit" name="login" class="btn btn-primary">Login</button>
-                </form>
-                <div style="text-align: center; margin-top: 15px;">
-                    <a href="forgot_password.php">Forgot your password?</a>
-                </div>
+    <nav class="main-nav">
+        <a href="register_organization.php">Register Organization</a>
+        <a href="register_user.php">Register User</a>
+    </nav>
+    
+    <button class="nav-toggle" aria-label="toggle navigation">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+    </button>
+</header>
+
+<div class="container">
+    <!-- Center the card on the page -->
+    <div class="card" style="max-width: 500px; margin: 4rem auto;">
+        <div class="card-header">
+            <h2>User Login</h2>
+        </div>
+
+        <!-- Example of an error message -->
+        <!-- <div class="alert alert-danger">Invalid credentials. Please try again.</div> -->
+
+        <form action="../controllers/auth_controller.php" method="POST">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
             </div>
+            
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            
+            <!-- Make the button full-width for a better look -->
+            <button type="submit" name="login" class="btn btn-primary" style="width: 100%;">Login</button>
+        </form>
+        <div style="text-align: center; margin-top: 1.5rem;">
+            <a href="forgot_password.php">Forgot your password?</a>
         </div>
     </div>
-     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="../assets/js/script.js"></script>
+</div>
+
+<script src="../assets/js/script.js"></script>
+
+<footer>
+    <p>&copy; 2023 <?= htmlspecialchars(APP_NAME) ?>. All Rights Reserved.</p>
+</footer>
 </body>
 </html>
+
 <?php
 include ('footer.php');
 ?>
