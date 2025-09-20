@@ -4,6 +4,7 @@
  *
  * Displays a list of all files within a user's organization and provides
  * tools to upload, download, rename, and delete them with a modern UI.
+ * This version filters out files from password-protected folders.
  */
 
 // --- 1. INITIALIZATION & SECURITY ---
@@ -48,8 +49,8 @@ function getFileIcon(string $filename, $size = "24"): string {
     }
 }
 
-// --- 3. DATA FETCHING ---
-$files = $folders = $folder_map = [];
+// --- 3. DATA FETCHING & FILTERING ---
+$files = $folder_map = [];
 $page_error = null;
 
 try {
@@ -58,11 +59,29 @@ try {
     $file_model = new File($pdo);
     $folder_model = new Folder($pdo);
     
-    $files = $file_model->getFilesByOrganization($org_id);
+    // Fetch all files for the organization initially.
+    $all_files = $file_model->getFilesByOrganization($org_id);
     
-    // Performance: Create a folder map to avoid N+1 queries in the table
+    // Fetch all folders to check for passwords and to create a name map.
     $all_org_folders = $folder_model->getAllFoldersByOrganization($org_id);
     $folder_map = array_column($all_org_folders, 'name', 'id');
+    
+    // Create a map of folder IDs to their password status for efficient lookup.
+    $folder_password_map = [];
+    foreach ($all_org_folders as $folder) {
+        // A folder is considered password-protected if the password field is not empty.
+        $folder_password_map[$folder['id']] = !empty($folder['password']);
+    }
+
+    // Filter the files list to exclude any files that reside in a password-protected folder.
+    $files = array_filter($all_files, function($file) use ($folder_password_map) {
+        // Condition 1: Keep the file if it's in the root directory (folder_id is null).
+        if (is_null($file['folder_id'])) {
+            return true;
+        }
+        // Condition 2: Keep the file if its parent folder exists and is NOT password protected.
+        return isset($folder_password_map[$file['folder_id']]) && $folder_password_map[$file['folder_id']] === false;
+    });
 
 } catch (PDOException $e) {
     error_log('Files Page Error: ' . $e->getMessage());
@@ -208,7 +227,7 @@ unset($_SESSION['page_error'], $_SESSION['page_success']);
                 </thead>
                 <tbody>
                     <?php if (empty($files)): ?>
-                        <tr><td colspan="7" style="text-align: center; padding: 40px;">No files found in your organization.</td></tr>
+                        <tr><td colspan="7" style="text-align: center; padding: 40px;">No public files found in your organization.</td></tr>
                     <?php else: ?>
                         <?php foreach ($files as $file): ?>
                         <tr class="item" data-id="<?= $file['id'] ?>" data-name="<?= htmlspecialchars($file['name']) ?>">
@@ -238,16 +257,16 @@ unset($_SESSION['page_error'], $_SESSION['page_success']);
     </div>
 
     <!-- MODALS -->
-    <div id="upload-modal" class="modal"><div class="modal-content"><span class="close-btn">&times;</span><h2>Upload New File</h2><form action="../controllers/file_controller.php" method="POST" enctype="multipart/form-data"><div class="form-group"><label>Select file:</label><input type="file" name="file_upload" required></div><div class="form-group"><label>Upload to Folder:</label><select name="folder_id"><option value="">Root Directory</option><?php foreach ($all_org_folders as $folder): ?><option value="<?= $folder['id'] ?>"><?= htmlspecialchars($folder['name']) ?></option><?php endforeach; ?></select></div><button type="submit" name="upload_file" class="btn btn-success">Upload Now</button></form></div></div>
-    <div id="rename-modal" class="modal"><div class="modal-content"><span class="close-btn">&times;</span><h2>Rename File</h2><form id="rename-form" action="../controllers/file_controller.php" method="POST"><input type="hidden" id="rename-id" name="file_id"><div class="form-group"><label>New Name:</label><input type="text" id="rename-name" name="new_name" required></div><button type="submit" name="rename_file" class="btn btn-primary">Save Changes</button></form></div></div>
-    <div id="delete-modal" class="modal"><div class="modal-content"><span class="close-btn">&times;</span><h2>Confirm Deletion</h2><p>Are you sure you want to delete "<strong id="delete-name"></strong>"?</p><form id="delete-form" action="../controllers/file_controller.php" method="POST" style="display: flex; gap: 10px; margin-top: 20px;"><input type="hidden" id="delete-id" name="file_id"><button type="button" class="btn close-btn-action" style="background-color: #ccc;">Cancel</button><button type="submit" name="delete_file" class="btn btn-danger">Delete</button></form></div></div>
+    <div id="upload-modal" class="modal"><div class="modal-content"><span class="close-btn">&times;</span><h2>Upload New File</h2><form action="../controllers/file_controller.php" method="POST" enctype="multipart/form-data"><div class="form-group"><label>Select file:</label><input type="file" name="file_upload" required></div><div class="form-group"><label>Upload to Folder:</label><select name="folder_id"><option value="">Root Directory</option><?php foreach ($all_org_folders as $folder): ?><?php if(empty($folder['password'])): ?><option value="<?= $folder['id'] ?>"><?= htmlspecialchars($folder['name']) ?></option><?php endif; ?><?php endforeach; ?></select></div><button type="submit" name="upload_file" class="btn btn-success">Upload Now</button></form></div></div>
+    <div id="rename-file-modal" class="modal"><div class="modal-content"><span class="close-btn">&times;</span><h2>Rename File</h2><form id="rename-form" action="../controllers/file_controller.php" method="POST"><input type="hidden" id="rename-id" name="file_id"><div class="form-group"><label>New Name:</label><input type="text" id="rename-name" name="new_name" required></div><button type="submit" name="rename_file" class="btn btn-primary">Save Changes</button></form></div></div>
+    <div id="delete-file-modal" class="modal"><div class="modal-content"><span class="close-btn">&times;</span><h2>Confirm Deletion</h2><p>Are you sure you want to delete "<strong id="delete-name"></strong>"?</p><form id="delete-form" action="../controllers/file_controller.php" method="POST" style="display: flex; gap: 10px; margin-top: 20px;"><input type="hidden" id="delete-id" name="file_id"><button type="button" class="btn close-btn-action" style="background-color: #ccc;">Cancel</button><button type="submit" name="delete_file" class="btn btn-danger">Delete</button></form></div></div>
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         const modals = {
             upload: document.getElementById('upload-modal'),
-            rename: document.getElementById('rename-modal'),
-            delete: document.getElementById('delete-modal')
+            rename: document.getElementById('rename-file-modal'),
+            delete: document.getElementById('delete-file-modal')
         };
 
         document.querySelectorAll('[data-modal-target]').forEach(button => {

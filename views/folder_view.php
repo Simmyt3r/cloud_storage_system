@@ -21,7 +21,36 @@ if (!is_logged_in()) {
     redirect('login.php');
 }
 
-// --- 2. DATA VALIDATION & PERMISSIONS ---
+// --- 2. HELPER FUNCTIONS ---
+// These functions are included here to ensure they are always available to this script.
+function formatFileSize(int $bytes): string {
+    if ($bytes <= 0) return '0 Bytes';
+    $k = 1024;
+    $sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    $i = floor(log($bytes, $k));
+    return round($bytes / pow($k, $i), 2) . ' ' . $sizes[$i];
+}
+
+function getFileIcon(string $filename, $size = "24"): string {
+    $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    $common_attrs = "width='{$size}' height='{$size}' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'";
+
+    switch ($extension) {
+        case 'pdf': 
+            return "<svg {$common_attrs} stroke='#E74C3C'><path d='M14 2v4a2 2 0 0 0 2 2h4'/><path d='M10 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h4.5l6.5 6.5v8a2 2 0 0 1-2 2Z'/><path d='M15 12H9'/><path d='M15 16H9'/></svg>";
+        case 'jpg': case 'jpeg': case 'png': case 'gif':
+            return "<svg {$common_attrs} stroke='#2ECC71'><rect x='3' y='3' width='18' height='18' rx='2' ry='2'></rect><circle cx='8.5' cy='8.5' r='1.5'></circle><polyline points='21 15 16 10 5 21'></polyline></svg>";
+        case 'doc': case 'docx':
+            return "<svg {$common_attrs} stroke='#3498DB'><path d='M14 2v4a2 2 0 0 0 2 2h4'/><path d='M10 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h4.5l6.5 6.5v8a2 2 0 0 1-2 2Z'/><path d='M12 18v-6'/><path d='M12 12H9'/><path d='M15 12h-3'/></svg>";
+        case 'zip': case 'rar': case '7z':
+             return "<svg {$common_attrs} stroke='#F1C40F'><line x1='10' y1='1' x2='10' y2='23'></line><path d='M2 8.5A2.5 2.5 0 0 1 4.5 6h15A2.5 2.5 0 0 1 22 8.5v7a2.5 2.5 0 0 1-2.5 2.5h-15A2.5 2.5 0 0 1 2 15.5v-7Z'></path><line x1='6' y1='12' x2='6' y2='12'></line><line x1='14' y1='12' x2='14' y2='12'></line></svg>";
+        default:
+            return "<svg {$common_attrs} stroke='#95A5A6'><path d='M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z'></path><polyline points='13 2 13 9 20 9'></polyline></svg>";
+    }
+}
+
+
+// --- 3. DATA VALIDATION & PERMISSIONS ---
 $folder_id = isset($_GET['folder_id']) ? (int)$_GET['folder_id'] : null;
 if (!$folder_id) {
     redirect('user_dashboard.php');
@@ -46,7 +75,7 @@ try {
         redirect('user_dashboard.php');
     }
 
-    // --- 3. PASSWORD PROTECTION & ACCESS LOGIC ---
+    // --- 4. PASSWORD PROTECTION & ACCESS LOGIC ---
     if ($folder_model->isPasswordProtected($folder_id)) {
         if (isset($_SESSION['folder_access_' . $folder_id]) && $_SESSION['folder_access_' . $folder_id] === true) {
             $has_access = true;
@@ -57,7 +86,7 @@ try {
         $has_access = true;
     }
 
-    // --- 4. DATA FETCHING & PROCESSING ---
+    // --- 5. DATA FETCHING & PROCESSING ---
     if ($has_access) {
         $file_model->logFolderAccess($folder_id, $user_id, $_SERVER['REMOTE_ADDR']);
         
@@ -76,9 +105,6 @@ try {
                 'date' => strtotime($file['uploaded_at']), 'size' => (int)$file['file_size']
             ];
         }
-        
-        // This is a placeholder for sorting logic if you wish to add it later
-        // usort($items, function($a, $b) { ... });
     }
     
     $folder_path = $folder_model->getFolderPath($folder_id);
@@ -89,7 +115,7 @@ try {
     $folder = ['name' => 'Error'];
 }
 
-// --- 5. FLASH MESSAGES ---
+// --- 6. FLASH MESSAGES ---
 $error = $_SESSION['page_error'] ?? null;
 $success = $_SESSION['page_success'] ?? null;
 unset($_SESSION['page_error'], $_SESSION['page_success']);
@@ -166,11 +192,6 @@ unset($_SESSION['page_error'], $_SESSION['page_success']);
         .grid-item .details { font-size: 13px; color: var(--text-muted); margin-top: 5px; }
         
         .folder-icon { color: #5DADE2; }
-        .icon-pdf { color: #E74C3C; }
-        .icon-image { color: #2ECC71; }
-        .icon-doc { color: #3498DB; }
-        .icon-zip { color: #F1C40F; }
-        .icon-file { color: #95A5A6; }
         
         .actions-menu { position: absolute; top: 10px; right: 10px; }
         .kebab-button { background: transparent; border: none; cursor: pointer; padding: 5px; border-radius: 50%; width: 30px; height: 30px; }
@@ -321,7 +342,6 @@ unset($_SESSION['page_error'], $_SESSION['page_success']);
     </div>
     
     <script>
-    // Using the same script as the dashboard for consistency
     document.addEventListener('DOMContentLoaded', () => {
         const modals = {
             createFolder: document.getElementById('create-folder-modal'),
