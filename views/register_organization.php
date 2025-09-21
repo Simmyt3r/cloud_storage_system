@@ -7,7 +7,7 @@
  */
 
 // --- 1. INITIALIZATION & SECURITY ---
-session_start();
+//session_start();
 require_once '../includes/config.php';
 
 // If a user is already logged in, they should not be on this page. Redirect them.
